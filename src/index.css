@@ -559,11 +559,49 @@ ul {
 }
 
 .note-content-editor {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: var(--space-md);
   flex: 1;
-  min-height: 200px;
+  min-height: 240px;
+}
+
+.note-content-editor__tap-area {
+  flex: 1;
+  min-height: 160px;
+  margin-top: var(--space-xs);
+  border-radius: var(--radius-md);
+  touch-action: manipulation;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.note-content-editor__tap-area:active {
+  background: color-mix(in srgb, var(--color-primary-soft) 55%, transparent);
+}
+
+.add-image-prompt {
+  position: absolute;
+  z-index: 20;
+  transform: translate(-50%, calc(-100% - 8px));
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border: none;
+  border-radius: var(--radius-full);
+  background: var(--color-primary);
+  color: #fff;
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  box-shadow: var(--shadow-md);
+  white-space: nowrap;
+  touch-action: manipulation;
+}
+
+.add-image-prompt:active {
+  transform: translate(-50%, calc(-100% - 8px)) scale(0.97);
 }
 
 .note-content-editor__text {
@@ -680,10 +718,9 @@ ul {
   margin-inline: auto;
 }
 
-.editor-toolbar--fixed .editor-toolbar__btn {
+.editor-toolbar--fixed .editor-toolbar__btn--full {
   flex: 1;
-  min-width: 0;
-  max-width: 220px;
+  max-width: none;
 }
 
 .editor-header__insert {

@@ -106,6 +106,18 @@ export function appendMissingImageMarkers(content: string, mediaIds: string[]): 
   return result
 }
 
+export function resolveEndInsertPoint(blocks: ContentBlock[]): { blockIndex: number; cursor: number } {
+  for (let i = blocks.length - 1; i >= 0; i--) {
+    const block = blocks[i]
+    if (block.type === 'text') {
+      return { blockIndex: i, cursor: block.text.length }
+    }
+  }
+  return { blockIndex: 0, cursor: 0 }
+}
+
+export type InsertImagePosition = { blockIndex: number; cursor: number }
+
 export function collectReferencedMediaIds(content: string): Set<string> {
   const ids = new Set<string>()
   for (const match of content.matchAll(IMG_MARKER_RE)) {
