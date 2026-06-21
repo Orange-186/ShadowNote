@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { ThemeToggle } from '../components/ThemeToggle'
+import { ShareSheet } from '../components/ShareSheet'
 import { useAuth } from '../contexts/AuthContext'
 import { fetchNoteById, saveNote } from '../hooks/useNotes'
 import { useTheme } from '../hooks/useTheme'
@@ -31,6 +32,8 @@ export function EditorPage() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [exporting, setExporting] = useState(false)
+  const [shareOpen, setShareOpen] = useState(false)
+  const [notice, setNotice] = useState<string | null>(null)
 
   const dirtyRef = useRef(false)
   const exportRef = useRef<HTMLDivElement>(null)
@@ -129,6 +132,11 @@ export function EditorPage() {
 
   const visibleMedia = media.filter((m) => !m.markedForDelete)
 
+  const handleShareNotify = (message: string) => {
+    setNotice(message)
+    window.setTimeout(() => setNotice((current) => (current === message ? null : current)), 2800)
+  }
+
   const handleExport = async () => {
     if (!exportRef.current) return
     setExporting(true)
@@ -182,6 +190,7 @@ export function EditorPage() {
       <main className="app-main editor-main">
         <div className="content-container editor-container">
           {error && <div className="alert alert--error" role="alert">{error}</div>}
+          {notice && <div className="alert alert--success" role="status">{notice}</div>}
 
           <div ref={exportRef} className="editor-body">
             <input
@@ -263,6 +272,25 @@ export function EditorPage() {
           </div>
         </div>
       </main>
+
+      <button
+        type="button"
+        className="fab fab--share"
+        onClick={() => setShareOpen(true)}
+        aria-label="分享笔记"
+      >
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M4 12v7a1 1 0 001 1h14a1 1 0 001-1v-7M16 6l-4-4-4 4M12 2v14" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </button>
+
+      <ShareSheet
+        open={shareOpen}
+        payload={{ title, content }}
+        exportElement={exportRef.current}
+        onClose={() => setShareOpen(false)}
+        onNotify={handleShareNotify}
+      />
     </div>
   )
 }
