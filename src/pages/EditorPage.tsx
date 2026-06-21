@@ -5,6 +5,7 @@ import { ShareSheet } from '../components/ShareSheet'
 import { WechatSharePanel } from '../components/WechatSharePanel'
 import { NoteContentEditor } from '../components/NoteContentEditor'
 import { useAuth } from '../contexts/AuthContext'
+import { useKeyboardInset } from '../hooks/useKeyboardInset'
 import { fetchNoteById, saveNote } from '../hooks/useNotes'
 import { useTheme } from '../hooks/useTheme'
 import type { LocalMedia, NoteMedia } from '../types/note'
@@ -46,6 +47,8 @@ export function EditorPage() {
   const imageInputRef = useRef<HTMLInputElement>(null)
   const videoInputRef = useRef<HTMLInputElement>(null)
   const insertImageRef = useRef<(mediaId: string) => void>(() => {})
+
+  useKeyboardInset()
 
   useEffect(() => {
     if (!id) return
@@ -251,6 +254,19 @@ export function EditorPage() {
           <div className="editor-header__actions">
             <button
               type="button"
+              className="icon-btn editor-header__insert"
+              onClick={() => imageInputRef.current?.click()}
+              disabled={imageCount >= MAX_IMAGES}
+              aria-label={`插入图片，已用 ${imageCount}/${MAX_IMAGES}`}
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <rect x="3" y="5" width="18" height="14" rx="2" stroke="currentColor" strokeWidth="1.6" />
+                <circle cx="8.5" cy="10" r="1.5" fill="currentColor" />
+                <path d="M21 16l-5-5-4 4-2-2-5 5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </button>
+            <button
+              type="button"
               className="btn btn--ghost btn--sm"
               onClick={handleExport}
               disabled={exporting}
@@ -303,49 +319,49 @@ export function EditorPage() {
               </div>
             )}
           </div>
-
-          <div className="editor-toolbar">
-            <input
-              ref={imageInputRef}
-              type="file"
-              accept="image/*"
-              multiple
-              hidden
-              onChange={(e) => {
-                addFiles(e.target.files, 'image')
-                e.target.value = ''
-              }}
-            />
-            <input
-              ref={videoInputRef}
-              type="file"
-              accept="video/*"
-              multiple
-              hidden
-              onChange={(e) => {
-                addFiles(e.target.files, 'video')
-                e.target.value = ''
-              }}
-            />
-            <button
-              type="button"
-              className="btn btn--ghost btn--sm"
-              onClick={() => imageInputRef.current?.click()}
-              disabled={imageCount >= MAX_IMAGES}
-            >
-              插入图片 ({imageCount}/{MAX_IMAGES})
-            </button>
-            <button
-              type="button"
-              className="btn btn--ghost btn--sm"
-              onClick={() => videoInputRef.current?.click()}
-              disabled={videoCount >= MAX_VIDEOS}
-            >
-              视频 ({videoCount}/{MAX_VIDEOS})
-            </button>
-          </div>
         </div>
       </main>
+
+      <div className="editor-toolbar editor-toolbar--fixed" role="toolbar" aria-label="编辑工具">
+        <input
+          ref={imageInputRef}
+          type="file"
+          accept="image/*"
+          multiple
+          hidden
+          onChange={(e) => {
+            addFiles(e.target.files, 'image')
+            e.target.value = ''
+          }}
+        />
+        <input
+          ref={videoInputRef}
+          type="file"
+          accept="video/*"
+          multiple
+          hidden
+          onChange={(e) => {
+            addFiles(e.target.files, 'video')
+            e.target.value = ''
+          }}
+        />
+        <button
+          type="button"
+          className="btn btn--ghost btn--sm editor-toolbar__btn"
+          onClick={() => imageInputRef.current?.click()}
+          disabled={imageCount >= MAX_IMAGES}
+        >
+          插入图片 ({imageCount}/{MAX_IMAGES})
+        </button>
+        <button
+          type="button"
+          className="btn btn--ghost btn--sm editor-toolbar__btn"
+          onClick={() => videoInputRef.current?.click()}
+          disabled={videoCount >= MAX_VIDEOS}
+        >
+          视频 ({videoCount}/{MAX_VIDEOS})
+        </button>
+      </div>
 
       <button
         type="button"

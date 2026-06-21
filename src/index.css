@@ -143,7 +143,14 @@ ul {
 }
 
 .editor-page {
-  padding-bottom: calc(var(--fab-size) + var(--space-lg) + var(--space-md) + var(--safe-bottom));
+  --editor-toolbar-height: 52px;
+  padding-bottom: calc(
+    var(--fab-size) + var(--editor-toolbar-height) + var(--space-lg) + var(--space-md) + var(--safe-bottom)
+  );
+}
+
+.editor-page .fab--share {
+  bottom: calc(var(--keyboard-inset, 0px) + var(--editor-toolbar-height) + var(--space-md) + var(--safe-bottom));
 }
 
 .app-header {
@@ -522,6 +529,7 @@ ul {
   display: flex;
   flex-direction: column;
   gap: var(--space-md);
+  padding-bottom: calc(var(--editor-toolbar-height, 52px) + var(--space-sm));
 }
 
 .editor-body {
@@ -651,6 +659,39 @@ ul {
   gap: var(--space-sm);
   padding: var(--space-sm) 0 0;
   flex-shrink: 0;
+}
+
+.editor-toolbar--fixed {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: calc(var(--keyboard-inset, 0px) + var(--safe-bottom));
+  z-index: 110;
+  margin: 0;
+  padding: var(--space-sm) calc(var(--space-md) + var(--safe-right)) var(--space-sm)
+    calc(var(--space-md) + var(--safe-left));
+  background: color-mix(in srgb, var(--color-bg) 94%, transparent);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-top: 1px solid var(--color-border);
+  box-shadow: 0 -4px 16px rgba(20, 25, 24, 0.06);
+  justify-content: center;
+  max-width: calc(var(--container-max) + var(--space-xl) * 2);
+  margin-inline: auto;
+}
+
+.editor-toolbar--fixed .editor-toolbar__btn {
+  flex: 1;
+  min-width: 0;
+  max-width: 220px;
+}
+
+.editor-header__insert {
+  color: var(--color-primary);
+}
+
+.editor-header__insert:disabled {
+  opacity: 0.45;
 }
 
 .media-grid {
