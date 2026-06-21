@@ -67,15 +67,6 @@ function inlineMarkdown(text: string): string {
     .replace(/`([^`]+)`/g, '<code>$1</code>')
 }
 
-export function encodeUtf8WithBom(content: string): Uint8Array {
-  const bom = new Uint8Array([0xef, 0xbb, 0xbf])
-  const body = new TextEncoder().encode(content)
-  const combined = new Uint8Array(bom.length + body.length)
-  combined.set(bom)
-  combined.set(body, bom.length)
-  return combined
-}
-
 export function encodeUtf8(content: string): Uint8Array {
   return new TextEncoder().encode(content)
 }
