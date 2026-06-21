@@ -544,8 +544,10 @@ ul {
   flex-shrink: 0;
 }
 
-.editor-title::placeholder {
-  color: var(--color-text-tertiary);
+.note-body-text {
+  line-height: 1.7;
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 
 .editor-content {
@@ -555,9 +557,12 @@ ul {
   border: none;
   background: transparent;
   resize: none;
-  line-height: 1.7;
   padding: 0;
   outline: none;
+}
+
+.editor-title::placeholder {
+  color: var(--color-text-tertiary);
 }
 
 .editor-content::placeholder {
@@ -1088,6 +1093,11 @@ ul {
   padding: var(--space-lg);
 }
 
+.share-page__body.editor-body {
+  flex: none;
+  min-height: 0;
+}
+
 .share-page__brand {
   margin: 0 0 var(--space-sm);
   font-size: var(--font-size-xs);
@@ -1096,56 +1106,12 @@ ul {
 }
 
 .share-page__title {
-  margin: 0 0 var(--space-sm);
-  font-size: var(--font-size-xl);
-  line-height: 1.35;
-}
-
-.share-page__summary {
   margin: 0 0 var(--space-md);
-  color: var(--color-text-secondary);
-  line-height: 1.6;
 }
 
 .share-page__content {
-  line-height: 1.8;
-}
-
-.share-page__content h2,
-.share-page__content h3,
-.share-page__content h4 {
-  margin: 1.2em 0 0.5em;
-  line-height: 1.4;
-}
-
-.share-page__content p {
-  margin: 0.5em 0;
-}
-
-.share-page__content pre {
-  overflow-x: auto;
-  padding: 12px;
-  border-radius: var(--radius-sm);
-  background: var(--color-primary-soft);
-}
-
-.share-page__content code {
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 0.92em;
-}
-
-.share-page__gallery {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-  gap: var(--space-sm);
-  margin-top: var(--space-lg);
-}
-
-.share-page__gallery img {
-  width: 100%;
-  aspect-ratio: 1;
-  object-fit: cover;
-  border-radius: var(--radius-sm);
+  min-height: 0;
+  flex: none;
 }
 
 .share-page__actions {

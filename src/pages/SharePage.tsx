@@ -1,7 +1,6 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { getContentSummary } from '../utils/formatDate'
-import { markdownToHtml } from '../utils/shareContent'
 import { fetchPublishedShare, parseShareToken, type SharedNoteView } from '../utils/publishSharePage'
 
 function setMetaTag(name: string, content: string, property = false) {
@@ -97,36 +96,28 @@ export function SharePage() {
   }
 
   const title = note.title.trim() || '无标题'
-  const summary = getContentSummary(note.content, 160)
-  const cover =
-    note.cover_url ||
-    note.note_media.find((item) => item.media_type === 'image')?.public_url
-  const images = note.note_media.filter((item) => item.media_type === 'image')
+  const media = [...note.note_media].sort((a, b) => a.sort_order - b.sort_order)
 
   return (
     <SharePageShell>
       <div className="share-page__card">
-        {cover && (
-          <div className="share-page__cover">
-            <img src={cover} alt={title} />
-          </div>
-        )}
-
-        <div className="share-page__body">
+        <div className="share-page__body editor-body">
           <p className="share-page__brand">XS NOTE · 公开分享</p>
-          <h1 className="share-page__title">{title}</h1>
-          <p className="share-page__summary">{summary}</p>
+          <h1 className="share-page__title editor-title">{title}</h1>
           {note.content.trim() && (
-            <div
-              className="share-page__content"
-              dangerouslySetInnerHTML={{ __html: markdownToHtml(note.content) }}
-            />
+            <div className="share-page__content note-body-text">{note.content}</div>
           )}
 
-          {images.length > 1 && (
-            <div className="share-page__gallery">
-              {images.slice(cover ? 1 : 0).map((item) => (
-                <img key={item.public_url} src={item.public_url} alt="" loading="lazy" />
+          {media.length > 0 && (
+            <div className="media-grid">
+              {media.map((item) => (
+                <div key={item.public_url} className="media-item">
+                  {item.media_type === 'image' ? (
+                    <img src={item.public_url} alt="" loading="lazy" />
+                  ) : (
+                    <video src={item.public_url} controls preload="metadata" />
+                  )}
+                </div>
               ))}
             </div>
           )}

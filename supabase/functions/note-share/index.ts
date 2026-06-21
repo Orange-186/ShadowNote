@@ -33,37 +33,22 @@ function summarize(content: string, maxLength = 120): string {
   return trimmed.length > maxLength ? `${trimmed.slice(0, maxLength)}…` : trimmed;
 }
 
-function inlineMarkdown(text: string): string {
-  return escapeHtml(text)
-    .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
-    .replace(/\*(.+?)\*/g, "<em>$1</em>")
-    .replace(/`([^`]+)`/g, "<code>$1</code>");
+function plainTextToHtml(text: string): string {
+  return escapeHtml(text);
 }
 
-function markdownToHtml(markdown: string): string {
-  const lines = markdown.replace(/\r\n/g, "\n").split("\n");
-  const parts: string[] = [];
+function renderMediaGrid(note: SharedNote): string {
+  const media = [...(note.note_media ?? [])].sort((a, b) => a.sort_order - b.sort_order);
+  if (media.length === 0) return "";
 
-  for (const line of lines) {
-    if (!line.trim()) {
-      parts.push("<br />");
-      continue;
-    }
-    if (/^#{1,3}\s+/.test(line)) {
-      const level = line.match(/^#+/)?.[0].length ?? 1;
-      const text = line.replace(/^#{1,3}\s+/, "");
-      const tag = level <= 1 ? "h2" : level === 2 ? "h3" : "h4";
-      parts.push(`<${tag}>${inlineMarkdown(text)}</${tag}>`);
-      continue;
-    }
-    if (/^[-*]\s+/.test(line)) {
-      parts.push(`<p>• ${inlineMarkdown(line.replace(/^[-*]\s+/, ""))}</p>`);
-      continue;
-    }
-    parts.push(`<p>${inlineMarkdown(line)}</p>`);
-  }
+  const items = media.map((item) => {
+    const mediaHtml = item.media_type === "image"
+      ? `<img src="${escapeHtml(item.public_url)}" alt="" />`
+      : `<video src="${escapeHtml(item.public_url)}" controls preload="metadata"></video>`;
+    return `<div class="media-item">${mediaHtml}</div>`;
+  }).join("");
 
-  return parts.join("\n");
+  return `<div class="media-grid">${items}</div>`;
 }
 
 function pickCover(note: SharedNote, fallback: string): string {
@@ -89,10 +74,11 @@ function renderPage(
   const image = pickCover(note, fallbackCover);
   const safeTitle = escapeHtml(title);
   const safeDescription = escapeHtml(description);
-  const safeContent = markdownToHtml(note.content?.trim() || "暂无正文");
+  const safeContent = plainTextToHtml(note.content?.trim() || "暂无正文");
   const safeImage = escapeHtml(image);
   const safeShareUrl = escapeHtml(shareUrl);
   const safeAppShareUrl = escapeHtml(appShareUrl);
+  const mediaGrid = renderMediaGrid(note);
 
   return `<!doctype html>
 <html lang="zh-CN">
@@ -115,29 +101,28 @@ function renderPage(
   <meta itemprop="description" content="${safeDescription}" />
   <meta itemprop="image" content="${safeImage}" />
   <style>
-    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #f1f3f2; color: #1e2d2c; }
+    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #f1f3f2; color: #1e2d2c; font-size: 16px; line-height: 1.6; }
     .wrap { max-width: 720px; margin: 0 auto; padding: 24px 16px 40px; }
     .card { background: #fff; border-radius: 16px; overflow: hidden; box-shadow: 0 8px 24px rgba(30,45,44,.08); }
-    .cover { width: 100%; aspect-ratio: 16/9; object-fit: cover; display: block; background: #e8efec; }
     .body { padding: 20px; }
     .brand { font-size: 12px; letter-spacing: .08em; color: #18924d; margin-bottom: 8px; }
-    h1 { margin: 0 0 12px; font-size: 24px; line-height: 1.35; }
-    .summary { margin: 0 0 16px; color: rgba(30,45,44,.65); line-height: 1.7; }
-    .content { line-height: 1.8; }
-    .content h2, .content h3, .content h4 { margin: 1.2em 0 0.5em; line-height: 1.4; }
-    .content p { margin: 0.5em 0; }
-    .link { display: inline-block; margin-top: 20px; color: #18924d; text-decoration: none; font-weight: 600; }
+    h1 { margin: 0 0 16px; font-size: clamp(1.375rem, 1.25rem + 0.6vw, 1.625rem); font-weight: 600; line-height: 1.3; }
+    .content { line-height: 1.7; white-space: pre-wrap; word-break: break-word; margin: 0; }
+    .media-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; margin-top: 24px; }
+    .media-item { position: relative; border-radius: 8px; overflow: hidden; background: #e8efec; aspect-ratio: 1; }
+    .media-item img, .media-item video { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .media-item video { object-fit: contain; background: #000; }
+    .link { display: inline-block; margin-top: 24px; color: #18924d; text-decoration: none; font-weight: 600; }
   </style>
 </head>
 <body>
   <div class="wrap">
     <article class="card">
-      <img class="cover" src="${safeImage}" alt="${safeTitle}" />
       <div class="body">
         <div class="brand">XS NOTE · 公开分享</div>
         <h1>${safeTitle}</h1>
-        <p class="summary">${safeDescription}</p>
         <div class="content">${safeContent}</div>
+        ${mediaGrid}
         <a class="link" href="${safeAppShareUrl}">在 XS Note 中打开</a>
       </div>
     </article>

@@ -221,7 +221,7 @@ export function EditorPage() {
               onChange={(e) => { setTitle(e.target.value); markDirty() }}
             />
             <textarea
-              className="editor-content"
+              className="editor-content note-body-text"
               placeholder="开始书写…"
               value={content}
               onChange={(e) => { setContent(e.target.value); markDirty() }}
