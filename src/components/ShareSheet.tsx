@@ -2,17 +2,16 @@ import { useState } from 'react'
 import { fetchNoteById } from '../hooks/useNotes'
 import { canvasToPngFile, captureNoteElement } from '../utils/exportNote'
 import { publishNoteShare } from '../utils/publishSharePage'
+import { WechatSharePanel } from './WechatSharePanel'
 import {
   buildShareText,
   canNativeShare,
   canShareFiles,
   copyShareText,
-  isWechatBrowser,
   nativeShare,
   openQQShare,
   openWeiboShare,
   openTwitterShare,
-  shareToWechatMoments,
   type ShareLinkPayload,
   type SharePayload,
 } from '../utils/shareNote'
@@ -139,9 +138,7 @@ export function ShareSheet({
   onNotify,
 }: ShareSheetProps) {
   const [busy, setBusy] = useState<ShareAction | null>(null)
-  const [wechatGuideUrl, setWechatGuideUrl] = useState<string | null>(null)
-
-  if (!open) return null
+  const [wechatShare, setWechatShare] = useState<ShareLinkPayload | null>(null)
 
   const visibleOptions = SHARE_OPTIONS.filter((option) => !option.hidden?.())
 
@@ -159,18 +156,7 @@ export function ShareSheet({
         }
         case 'wechat': {
           const linkPayload = await buildShareLinkPayload(noteId, userId, payload, coverUrl, onPrepareShare)
-          const result = await shareToWechatMoments(linkPayload)
-          if (result === 'wechat-guide') {
-            setWechatGuideUrl(linkPayload.url)
-            onNotify('公开链接已复制，请按提示分享到朋友圈')
-            break
-          }
-          if (result === 'native') {
-            onNotify('已唤起系统分享')
-            onClose()
-            break
-          }
-          onNotify('公开分享链接已复制，打开微信朋友圈粘贴即可看到标题、摘要和封面')
+          setWechatShare(linkPayload)
           onClose()
           break
         }
@@ -230,6 +216,7 @@ export function ShareSheet({
 
   return (
     <>
+      {open && (
       <div className="share-sheet-overlay" role="presentation" onClick={onClose}>
         <div
           className="share-sheet"
@@ -279,26 +266,14 @@ export function ShareSheet({
           </button>
         </div>
       </div>
-
-      {wechatGuideUrl && isWechatBrowser() && (
-        <div className="wechat-guide-overlay" role="dialog" aria-modal="true">
-          <div className="wechat-guide">
-            <p className="wechat-guide__tip">链接已复制，点击右上角 <strong>···</strong></p>
-            <p className="wechat-guide__tip">选择「分享到朋友圈」即可发布带封面卡片</p>
-            <p className="wechat-guide__url">{wechatGuideUrl}</p>
-            <button
-              type="button"
-              className="btn btn--primary btn--block"
-              onClick={() => {
-                setWechatGuideUrl(null)
-                onClose()
-              }}
-            >
-              知道了
-            </button>
-          </div>
-        </div>
       )}
+
+      <WechatSharePanel
+        open={wechatShare !== null}
+        payload={wechatShare}
+        onClose={() => setWechatShare(null)}
+        onNotify={onNotify}
+      />
     </>
   )
 }
