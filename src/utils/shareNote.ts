@@ -11,20 +11,46 @@ export function buildShareText({ title, content }: SharePayload): string {
 
 export async function copyShareText(payload: SharePayload): Promise<void> {
   const text = buildShareText(payload)
-  if (navigator.clipboard?.writeText) {
-    await navigator.clipboard.writeText(text)
-    return
+
+  try {
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(text)
+      return
+    }
+  } catch {
+    // iOS / 部分浏览器 clipboard API 可能失败，回退到 execCommand
   }
 
   const textarea = document.createElement('textarea')
   textarea.value = text
   textarea.setAttribute('readonly', '')
   textarea.style.position = 'fixed'
+  textarea.style.left = '0'
+  textarea.style.top = '0'
   textarea.style.opacity = '0'
+  textarea.style.pointerEvents = 'none'
   document.body.appendChild(textarea)
+  textarea.focus()
   textarea.select()
-  document.execCommand('copy')
+  textarea.setSelectionRange(0, text.length)
+
+  const copied = document.execCommand('copy')
   document.body.removeChild(textarea)
+
+  if (!copied) {
+    throw new Error('复制失败，请使用「复制」按钮或手动选择内容')
+  }
+}
+
+/** 微信无 Web 分享接口：移动端优先调系统分享（可选微信），否则复制并提示 */
+export async function shareViaWeChat(payload: SharePayload): Promise<'shared' | 'copied'> {
+  if (canNativeShare()) {
+    await nativeShare(payload)
+    return 'shared'
+  }
+
+  await copyShareText(payload)
+  return 'copied'
 }
 
 export function openWeiboShare(payload: SharePayload): void {

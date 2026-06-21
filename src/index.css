@@ -864,6 +864,38 @@ ul {
   min-height: 44px;
 }
 
+/* Toast */
+
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: calc(var(--fab-size) + var(--space-lg) + var(--safe-bottom));
+  transform: translateX(-50%);
+  z-index: 300;
+  max-width: min(340px, calc(100vw - var(--space-xl) * 2));
+  padding: var(--space-sm) var(--space-md);
+  background: rgba(20, 28, 27, 0.92);
+  color: #fff;
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  line-height: 1.5;
+  text-align: center;
+  box-shadow: var(--shadow-md);
+  pointer-events: none;
+  animation: toast-in 0.22s ease;
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
 /* Alerts & states */
 
 .alert {

@@ -9,6 +9,7 @@ import {
   openQQShare,
   openWeiboShare,
   openTwitterShare,
+  shareViaWeChat,
   type SharePayload,
 } from '../utils/shareNote'
 
@@ -104,11 +105,14 @@ export function ShareSheet({ open, payload, exportElement, onClose, onNotify }: 
           await nativeShare(payload)
           onClose()
           break
-        case 'wechat':
-          await copyShareText(payload)
-          onNotify('已复制内容，请打开微信粘贴分享')
+        case 'wechat': {
+          const result = await shareViaWeChat(payload)
           onClose()
+          if (result === 'copied') {
+            onNotify('内容已复制，请打开微信粘贴分享')
+          }
           break
+        }
         case 'weibo':
           openWeiboShare(payload)
           onClose()

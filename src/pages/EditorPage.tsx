@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { ThemeToggle } from '../components/ThemeToggle'
 import { ShareSheet } from '../components/ShareSheet'
+import { Toast } from '../components/Toast'
 import { useAuth } from '../contexts/AuthContext'
 import { fetchNoteById, saveNote } from '../hooks/useNotes'
 import { useTheme } from '../hooks/useTheme'
@@ -190,7 +191,6 @@ export function EditorPage() {
       <main className="app-main editor-main">
         <div className="content-container editor-container">
           {error && <div className="alert alert--error" role="alert">{error}</div>}
-          {notice && <div className="alert alert--success" role="status">{notice}</div>}
 
           <div ref={exportRef} className="editor-body">
             <input
@@ -291,6 +291,8 @@ export function EditorPage() {
         onClose={() => setShareOpen(false)}
         onNotify={handleShareNotify}
       />
+
+      <Toast message={notice} onDismiss={() => setNotice(null)} />
     </div>
   )
 }
