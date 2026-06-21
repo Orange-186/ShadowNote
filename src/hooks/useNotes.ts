@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import type { LocalMedia, Note, NoteMedia } from '../types/note'
+import { removePublishedShare, syncPublishedShare } from '../utils/publishSharePage'
 
 function sortNotes(notes: Note[]): Note[] {
   return [...notes].sort((a, b) => {
@@ -52,6 +53,10 @@ export function useNotes(userId: string | undefined) {
     if (note?.note_media?.length) {
       const paths = note.note_media.map((m) => m.storage_path)
       await supabase.storage.from('note-media').remove(paths)
+    }
+
+    if (note) {
+      await removePublishedShare(note.user_id, noteId).catch(() => {})
     }
 
     const { error: deleteError } = await supabase.from('notes').delete().eq('id', noteId)
@@ -118,7 +123,7 @@ export async function saveNote(
   title: string,
   content: string,
   media: LocalMedia[],
-): Promise<Note> {
+): Promise<{ note: Note; shareSynced: boolean }> {
   const activeMedia = media.filter((m) => !m.markedForDelete)
   const coverUrl = activeMedia.find((m) => m.media_type === 'image')?.public_url ?? null
 
@@ -173,5 +178,13 @@ export async function saveNote(
 
   const saved = await fetchNoteById(noteId)
   if (!saved) throw new Error('保存后无法读取笔记')
-  return saved
+
+  let shareSynced = false
+  try {
+    shareSynced = await syncPublishedShare(saved, userId)
+  } catch {
+    shareSynced = false
+  }
+
+  return { note: saved, shareSynced }
 }

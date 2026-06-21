@@ -67,6 +67,11 @@ export function EditorPage() {
   const imageCount = media.filter((m) => m.media_type === 'image' && !m.markedForDelete).length
   const videoCount = media.filter((m) => m.media_type === 'video' && !m.markedForDelete).length
 
+  const handleShareNotify = useCallback((message: string) => {
+    setNotice(message)
+    window.setTimeout(() => setNotice((current) => (current === message ? null : current)), 2800)
+  }, [])
+
   const handleSave = useCallback(async (): Promise<boolean> => {
     if (!id || !user) return false
 
@@ -79,8 +84,11 @@ export function EditorPage() {
     setError(null)
 
     try {
-      await saveNote(id, user.id, title, content, media)
+      const { shareSynced } = await saveNote(id, user.id, title, content, media)
       dirtyRef.current = false
+      if (shareSynced) {
+        handleShareNotify('公开链接已同步')
+      }
       return true
     } catch (err) {
       setError(err instanceof Error ? err.message : '保存失败')
@@ -89,7 +97,7 @@ export function EditorPage() {
       savingRef.current = false
       setSaving(false)
     }
-  }, [id, user, title, content, media])
+  }, [id, user, title, content, media, handleShareNotify])
 
   const handlePrepareShare = useCallback(async (): Promise<boolean> => {
     if (!id || !user) return false
@@ -149,11 +157,6 @@ export function EditorPage() {
 
   const visibleMedia = media.filter((m) => !m.markedForDelete)
   const coverUrl = visibleMedia.find((m) => m.media_type === 'image')?.public_url ?? null
-
-  const handleShareNotify = (message: string) => {
-    setNotice(message)
-    window.setTimeout(() => setNotice((current) => (current === message ? null : current)), 2800)
-  }
 
   const handleExport = async () => {
     if (!exportRef.current) return

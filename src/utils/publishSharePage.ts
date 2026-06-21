@@ -73,6 +73,86 @@ function noteToSharedView(note: Note): SharedNoteView {
   }
 }
 
+function shareJsonPath(userId: string, noteId: string): string {
+  return `${shareStorageBase(userId, noteId)}.json`
+}
+
+const SHARED_NOTES_STORAGE_KEY = 'xs-note-shared-notes'
+
+function readSharedNoteIds(): Set<string> {
+  try {
+    const raw = localStorage.getItem(SHARED_NOTES_STORAGE_KEY)
+    if (!raw) return new Set()
+    return new Set(JSON.parse(raw) as string[])
+  } catch {
+    return new Set()
+  }
+}
+
+export function markNoteAsPubliclyShared(noteId: string): void {
+  try {
+    const ids = readSharedNoteIds()
+    if (ids.has(noteId)) return
+    ids.add(noteId)
+    localStorage.setItem(SHARED_NOTES_STORAGE_KEY, JSON.stringify([...ids]))
+  } catch {
+    // ignore quota / private mode
+  }
+}
+
+export function clearNotePublicShareMark(noteId: string): void {
+  try {
+    const ids = readSharedNoteIds()
+    if (!ids.has(noteId)) return
+    ids.delete(noteId)
+    localStorage.setItem(SHARED_NOTES_STORAGE_KEY, JSON.stringify([...ids]))
+  } catch {
+    // ignore
+  }
+}
+
+async function shareJsonExists(userId: string, noteId: string): Promise<boolean> {
+  const { data, error } = await supabase.storage
+    .from('note-media')
+    .list(`${userId}/shares`, { limit: 100 })
+  if (error) return false
+  return data.some((item) => item.name === `${noteId}.json`)
+}
+
+async function uploadShareJson(note: Note, userId: string): Promise<void> {
+  const shared = noteToSharedView(note)
+  const jsonPath = shareJsonPath(userId, note.id)
+  const jsonBytes = encodeUtf8(JSON.stringify(shared))
+
+  await supabase.storage.from('note-media').remove([jsonPath])
+
+  const jsonUpload = await supabase.storage
+    .from('note-media')
+    .upload(jsonPath, jsonBytes, {
+      contentType: 'application/json; charset=utf-8',
+      cacheControl: '60',
+    })
+
+  if (jsonUpload.error) throw new Error(`发布分享失败：${jsonUpload.error.message}`)
+}
+
+/** 若笔记已公开分享，则同步最新内容到 Storage */
+export async function syncPublishedShare(note: Note, userId: string): Promise<boolean> {
+  const markedShared = readSharedNoteIds().has(note.id)
+  if (!markedShared && !(await shareJsonExists(userId, note.id))) {
+    return false
+  }
+
+  await uploadShareJson(note, userId)
+  markNoteAsPubliclyShared(note.id)
+  return true
+}
+
+export async function removePublishedShare(userId: string, noteId: string): Promise<void> {
+  await supabase.storage.from('note-media').remove([shareJsonPath(userId, noteId)])
+  clearNotePublicShareMark(noteId)
+}
+
 async function probeShareCard(cardUrl: string): Promise<boolean> {
   try {
     const response = await Promise.race([
@@ -89,23 +169,10 @@ async function probeShareCard(cardUrl: string): Promise<boolean> {
 }
 
 export async function publishNoteShare(note: Note, userId: string): Promise<PublishedShare> {
-  const shared = noteToSharedView(note)
-  const base = shareStorageBase(userId, note.id)
+  await uploadShareJson(note, userId)
+  markNoteAsPubliclyShared(note.id)
+
   const token = buildShareToken(userId, note.id)
-  const jsonBytes = encodeUtf8(JSON.stringify(shared))
-
-  const jsonPath = `${base}.json`
-  await supabase.storage.from('note-media').remove([jsonPath])
-
-  const jsonUpload = await supabase.storage
-    .from('note-media')
-    .upload(jsonPath, jsonBytes, {
-      contentType: 'application/json; charset=utf-8',
-      cacheControl: '300',
-    })
-
-  if (jsonUpload.error) throw new Error(`发布分享失败：${jsonUpload.error.message}`)
-
   const cardUrl = buildWechatCardUrl(userId, note.id)
   const viewUrl = buildAppShareUrl(token)
   const cardReady = await probeShareCard(cardUrl)
@@ -114,7 +181,7 @@ export async function publishNoteShare(note: Note, userId: string): Promise<Publ
 }
 
 export async function fetchPublishedShare(userId: string, noteId: string): Promise<SharedNoteView | null> {
-  const path = `${shareStorageBase(userId, noteId)}.json`
+  const path = shareJsonPath(userId, noteId)
   const { data } = supabase.storage.from('note-media').getPublicUrl(path)
   const response = await fetch(`${data.publicUrl}?t=${Date.now()}`)
   if (!response.ok) return null
