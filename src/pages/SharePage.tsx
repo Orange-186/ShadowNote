@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { getContentSummary } from '../utils/formatDate'
 import { markdownToHtml } from '../utils/shareContent'
@@ -14,6 +14,16 @@ function setMetaTag(name: string, content: string, property = false) {
     document.head.appendChild(tag)
   }
   tag.setAttribute('content', content)
+}
+
+function SharePageShell({ children }: { children: ReactNode }) {
+  return (
+    <div className="app-shell">
+      <main className="app-main">
+        <div className="share-page">{children}</div>
+      </main>
+    </div>
+  )
 }
 
 export function SharePage() {
@@ -66,21 +76,23 @@ export function SharePage() {
 
   if (loading) {
     return (
-      <div className="page-loading">
-        <div className="spinner" aria-label="加载中" />
-      </div>
+      <SharePageShell>
+        <div className="page-loading page-loading--inline">
+          <div className="spinner" aria-label="加载中" />
+        </div>
+      </SharePageShell>
     )
   }
 
   if (missing || !note) {
     return (
-      <div className="share-page">
+      <SharePageShell>
         <div className="share-page__card share-page__card--empty">
           <h1>分享不存在</h1>
           <p>该笔记可能尚未发布分享，或链接已失效。</p>
           <Link to="/" className="btn btn--primary">返回 XS Note</Link>
         </div>
-      </div>
+      </SharePageShell>
     )
   }
 
@@ -92,7 +104,7 @@ export function SharePage() {
   const images = note.note_media.filter((item) => item.media_type === 'image')
 
   return (
-    <div className="share-page">
+    <SharePageShell>
       <div className="share-page__card">
         {cover && (
           <div className="share-page__cover">
@@ -124,6 +136,6 @@ export function SharePage() {
           </div>
         </div>
       </div>
-    </div>
+    </SharePageShell>
   )
 }
