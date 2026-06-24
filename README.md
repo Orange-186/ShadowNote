@@ -43,6 +43,10 @@ npm run dev
 
 浏览器访问 `http://localhost:5173`
 
+## 线上地址
+
+https://xs-note.vercel.app/
+
 ## 功能（MVP）
 
 - 邮箱 + 密码注册/登录

@@ -200,8 +200,8 @@ Deno.serve(async (req) => {
   }
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
-  const appOrigin = Deno.env.get("APP_ORIGIN") ?? "https://orange-186.github.io";
-  const appBase = Deno.env.get("APP_BASE_PATH") ?? "/XS-Note";
+  const appOrigin = (Deno.env.get("APP_ORIGIN") ?? "https://xs-note.vercel.app").replace(/\/$/, "");
+  const appBase = (Deno.env.get("APP_BASE_PATH") ?? "").replace(/\/$/, "");
 
   if (!supabaseUrl) {
     return new Response("Server misconfigured", { status: 500 });
